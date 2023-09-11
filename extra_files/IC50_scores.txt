@@ -1,8 +1,0 @@
-> MultilayerPerceptronNN/T85_2_z-scales - {'activation': 'elu', 'alpha': 1.0, 'dropout_prob': 0.5, 'embed_exponent': 0.56, 'embedding_size_factor': 1.3, 'epochs_wo_improve': 20, 'gamma': 0.46880943055549684, 'hidden_size': 128, 'learning_rate': 0.007864444080031962, 'loss_function': 'auto', 'max_embedding_dim': 100, 'maximum_batch_size': 512, 'num_epochs': 500, 'num_layers': 7, 'optim': 'adam', 'proc_embed_min_categories': 4, 'proc_impute_strategy': 'median', 'proc_max_category_levels': 100, 'proc_skew_threshold': 0.99, 'seed_value': 0, 'use_batchnorm': True, 'use_ngram_features': False, 'weight_decay': 4.4362519810059586e-11, 'y_range': None, 'y_range_extend': 0.05}
-RMSE	MSE	r2	pearsonr	spearmanr
-1.628928767958561	2.653408931082995	0.38321984415911514	0.6378032957460271	0.6574159826723835
-
-> CatBoostModel/T53_0_esm2_3B - {'allow_writing_files': False, 'depth': 8, 'iterations': 10000, 'l2_leaf_reg': 3.64069414997074, 'learning_rate': 0.014577791460449551, 'random_seed': 0}
-RMSE	MSE	r2	pearsonr	spearmanr
-1.5324877884684003	2.3485188218047686	0.45409100424005144	0.6756500464658838	0.6900382840614626
-
