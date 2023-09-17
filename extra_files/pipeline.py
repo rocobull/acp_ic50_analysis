@@ -20,7 +20,7 @@ def pipeline(X_train:pd.DataFrame, y_train:pd.DataFrame, #X_test:pd.DataFrame, y
 
     hyperparameter_tune_kwargs = {
         'num_trials': num_trials,
-        'scheduler': scheduler,
+        'scheduler': scheduler, # ?????
         'searcher': searcher,
     }
 
@@ -32,8 +32,6 @@ def pipeline(X_train:pd.DataFrame, y_train:pd.DataFrame, #X_test:pd.DataFrame, y
         models=models, # AUTOMATIC = (best_quality, high_quality, good_quality, medium_quality, optimize_for_deployment, ignore_text)
         num_gpus=num_gpus
     )
-
-    #predictor.learner._learner.feature_generator.pre_drop_useless = False
 
     if preprocessing_steps is None:
         preprocessing_steps = []

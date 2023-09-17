@@ -2,7 +2,6 @@ from typing import Union
 
 from omnia.generics.scaling import StandardScaler, MinMaxScaler
 from omnia.generics.feature_selection import MulticollinearityFS
-#from omnia.generics.normalization import OutliersFS
 from omnia.generics.normalization import Skewness
 
 from omnia.proteins.feature_extraction.protein_descriptor import ProteinDescriptor

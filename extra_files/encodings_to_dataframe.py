@@ -58,7 +58,55 @@ with open(os.path.dirname(__file__) + "/regression_data/heavy_seqs_aa.fasta", "r
         ALL_ABS["heavy"][title.split("_")[0]] = seq
 
 
+### Virus Sequences ###
 
+# --- FETCH VALID VIRUS NAMES AND IDs ---
+
+# ALL_VIR = {}
+#
+# all_names_ids = []
+#
+# for line in open("regression_data/viruses.txt", "r").readlines()[1:]:
+#     line = line.split("\t")
+#     if line[0] != "Virus name": # Check if line is not header line
+#         if (line[0] != "") and (line[9] != ""):
+#             virus_name = line[0]
+#             genbank_id = line[9]
+#             all_names_ids.append((virus_name, genbank_id))
+#
+# vir_names, vir_ids = zip(*all_names_ids)
+
+# vir_ids = {vir_names[ix]: ids for ix, ids in enumerate(vir_ids)}
+
+
+# --- FETCH VIRUS SEQUENCES ---
+#
+# Entrez.email = "roberto.bullitta@hotmail.co.uk"
+#
+# for ix, name in enumerate(vir_names):
+#     handle = Entrez.efetch(db="nucleotide", id=vir_ids[name], rettype="gb", retmode="text")
+#
+#     record = SeqIO.read(handle, "gb")
+#     record_feats = [feat for feat in record.features if (feat.type == "CDS") and ("gene" in feat.qualifiers)]
+#     env_qual = [feat.qualifiers for feat in record_feats if feat.qualifiers["gene"][0] == "env"]
+#     if len(env_qual) > 0:
+#         if "translation" in env_qual[0]:
+#             ALL_VIR[name] = env_qual[0]["translation"][0]
+#         else:
+#             print(name, vir_ids[name], env_qual[0])
+#     handle.close()
+#
+#
+# --- SAVE SEQS IN FILE ---
+#
+# with open("regression_data/virus_env_seqs.fasta", "w") as file:
+#     to_write = ""
+#     for name,seq in ALL_VIR.items():
+#         to_write += f">{name} | {vir_ids[name]}\n{seq}\n"
+#     file.write(to_write)
+
+
+# --- RETRIEVE SEQS FROM FILE ---
 
 ALL_VIR = {}
 with open(os.path.dirname(__file__) + "/regression_data/virus_env_seqs.fasta") as handle:
@@ -274,7 +322,7 @@ def extract_complex_encodings(complex_list:np.array, y=None, quantile=0.99, max_
     ordered_complex_list = []
     count = 0
     for ab in complexes:
-        logging.info(msg=f"\nAB: {ab} - {len(complexes[ab])} viruses")
+        #logging.info(msg=f"\nAB: {ab} - {len(complexes[ab])} viruses")
         for vir in complexes[ab]:
 
             line_to_add = list(abs_data_features.loc[ab]) + list(virus_data_features.loc[vir])
@@ -283,7 +331,7 @@ def extract_complex_encodings(complex_list:np.array, y=None, quantile=0.99, max_
             count += 1
 
     # Total complexes: 3662
-    logging.info(msg=f"\n\n{complex_data.shape}\n\n")
+    #logging.info(msg=f"\n\n{complex_data.shape}\n\n")
 
     complex_data.index = ordered_complex_list
     if not (y is None):
