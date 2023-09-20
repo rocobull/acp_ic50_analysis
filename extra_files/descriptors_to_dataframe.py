@@ -14,14 +14,20 @@ from Bio.SeqIO.FastaIO import SimpleFastaParser
 
 ### BINARY ###
 
-def convert_acp_to_dataframe(input_path): #output_path=None)
+def convert_acp_to_dataframe(input_path:str) -> pd.DataFrame:
     """
-    :param input_path:
-    :param output_path:
-    :return:
-    """
-    text_file = open(input_path).readlines()
+    Extracts data from the "acp740.txt" or "acp240.txt" files and converts them to pd.DataFrame instances.
 
+    Parameters
+    ----------
+    input_path: str
+        The path to the data files.
+
+    Returns
+    -------
+    data: pd.DataFrame
+        The data as a pd.DataFrame instance.
+    """
     titles = []
     seqs = []
     y = []
