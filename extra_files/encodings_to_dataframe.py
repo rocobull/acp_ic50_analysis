@@ -13,46 +13,26 @@ from Bio import Entrez
 from Bio.SeqIO.FastaIO import SimpleFastaParser
 
 from math import floor
-from typing import Union
+from typing import Union, List, Tuple
 import os
 import logging
 
 
 ### REGRESSION ###
 
-
 warnings.filterwarnings("ignore")
-
-
-### NOTE ###
-
-# The baseline models used are the same as the ones used in the respective article,
-# but the comparison made is NOT the same. In the article, the baseline models used
-# serve to evaluate the classification model, which is not created here. So whilst
-# the baseline models used are the same, they are used to compare the created regression
-# models.
-
-# "The N-terminal subunit, gp120, is completely outside the viral membrane. Although the
-# protein has a complex fold it can also be viewed as being linearly organized into five
-# conserved regions (C1-C5) interspersed with five variable regions (V1-V5). The host receptor
-# CD4 interacts with residues in the conserved regions of gp120 on either side of V4, and the
-# coreceptor CCR5 interacts both with a GPGR/Q motif at the apex of the V3 loop and at its base."
-# (https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3658113/)
-
-# "The CD4 binding site is composed of several discontinuous structural regions of gp120 (ref. 8);"
-# (https://www.nature.com/articles/nsmb.1861)
-
-### ---- ###
 
 
 ### Antibody sequences ###
 
 ALL_ABS = {"light":{}, "heavy":{}}
 
+# Get light-chain sequences
 with open(os.path.dirname(__file__) + "/regression_data/light_seqs_aa.fasta", "r") as handle:
     for title, seq in SimpleFastaParser(handle):
         ALL_ABS["light"][title.split("_")[0]] = seq
 
+# Get heavy-chain sequences
 with open(os.path.dirname(__file__) + "/regression_data/heavy_seqs_aa.fasta", "r") as handle:
     for title, seq in SimpleFastaParser(handle):
         ALL_ABS["heavy"][title.split("_")[0]] = seq
@@ -124,24 +104,38 @@ with open(os.path.dirname(__file__) + "/regression_data/virus_env_seqs.fasta") a
 
 
 def _get_mean_vals(df:pd.DataFrame) -> pd.DataFrame:
-    # df structure:
+    # input df structure:
     # -------------
     # [[1,2,3], [4,5,6]]
-    # [[1,2,3], [4,5,6], [7,8,9], [10,11,12]]
+    # [[1,2,3], [4,5,6], [7,8,9], [1,2,3]]
     # [[1,2,3], [4,5,6], [7,8,9]]
     # ...
     # -------------
-    # if type(data) == dict:
-    #     return {k: [[np.mean(vals) for vals in zip(*v)]] for k, v in data.items()}
+
+    # output df structure:
+    # -------------
+    # [[1,2,3]]
+    # [[4,5,6]]
+    # [[7,8,9]]
+    # ...
+    # -------------
     return df.applymap(lambda x: [[np.mean(vals) for vals in zip(*x)]])
 
 
-def _encoding_dataframe(df, max_len, prefix="heavy"):
-    # df structure:
+def _encoding_dataframe(df:pd.DataFrame, max_len:int, prefix:str="heavy") -> pd.DataFrame:
+    # input df structure:
     # -------------
     # [[1,2,3], [4,5,6]]
-    # [[1,2,3], [4,5,6], [7,8,9], [10,11,12]]
+    # [[1,2,3], [4,5,6], [7,8,9], [1,2,3]]
     # [[1,2,3], [4,5,6], [7,8,9]]
+    # ...
+    # -------------
+
+    # output df structure:
+    # -------------
+    # [1,2,3,4,5,6,0,0,0,0,0,0]
+    # [1,2,3,4,5,6,7,8,9,1,2,3]
+    # [1,2,3,4,5,6,7,8,9,0,0,0]
     # ...
     # -------------
     all_lines = []
@@ -159,12 +153,48 @@ def _encoding_dataframe(df, max_len, prefix="heavy"):
 
 
 
-def extract_complex_encodings(complex_list:np.array, y=None, quantile=0.99, max_sizes=None, encoder="nlf",
-                              **kwargs):
+def extract_complex_encodings(complex_list:List[str], y:Union[pd.Series, None]=None, quantile:float=0.99,
+                              max_sizes:Union[List[int], None]=None, encoder:str="nlf",
+                              **kwargs) -> Tuple[pd.DataFrame, Union[pd.Series, None]]:
     """
+    Extract the specified encodings for the available light and heavy-chain antibody sequences,
+    and viral env protein sequences.
+
+    Parameters
+    ----------
+    complex_list: List[str]
+        Array of complex names (virus_antibody).
+    y: Union[pd.Series, None]
+        y data.
+    quantile: float
+        Quantile value to retrieve maximum sequence sizes for each group (light-chain, heavy-chain and viral sequences).
+    max_sizes: Union[List[int], None]
+        List of predefined maximum sequence sizes (should be of size 3, 1 for each sequence group).
+        If None, then the maximum sizes are determined using the defined quantile value.
+    encoder: str
+        String value to define the type of encodings to extract.
+        Possible values are:
+            'nlf' - Uses the NLFEncoder class;
+            'protbert' - Uses the ProtBertEncoder class;
+            'z-scales' - Uses the ZScaleEncoder class;
+            'esm1' - Uses the Esm1bEncoder class;
+            'esm2_8M' - Uses the Esm2Encoder class (pretrained with 8 million parameters);
+            'esm2_35M' - Uses the Esm2Encoder class (pretrained with 35 million parameters);
+            'esm2_150M' - Uses the Esm2Encoder class (pretrained with 150 million parameters);
+            'esm2_650M' - Uses the Esm2Encoder class (pretrained with 650 million parameters);
+            'esm2_3B' - Uses the Esm2Encoder class (pretrained with 3 billion parameters).
+    kwargs:
+        Arguments to pass to the encoding class used.
+
+    Returns
+    -------
+    x_data: pd.DataFrame
+        The encoding data for all 3 sequence types - light-chain, heavy-chain and viral sequences, respectively.
+    y_data: Union[pd.Series, None]
+        The 'y' data (if 'y' parameter is not None).
     """
 
-    # Store virus env protein sequences and antibody heavy and light chain sequences
+    # Store virus env protein sequences and antibody heavy and light-chain sequences
     virus = {}
     check_repeated_virus = set()
 
@@ -205,7 +235,7 @@ def extract_complex_encodings(complex_list:np.array, y=None, quantile=0.99, max_
     virus_data = pd.DataFrame({"seq": list(virus.values())}, index=list(virus.keys()))
     virus_data, _ = ProteinStandardizer().fit_transform(virus_data)
 
-    # Prepare transformer
+    # Prepare NLF, ProtBert or Z-scale transformer
     if encoder in ["nlf", "protbert", "z-scales"]:
         if encoder == "nlf":
             transformer = NLFEncoder(**kwargs)
@@ -214,7 +244,7 @@ def extract_complex_encodings(complex_list:np.array, y=None, quantile=0.99, max_
         else:
             transformer = ZScaleEncoder(**kwargs)
 
-        # Extract heavy and light chain features for each antibody
+        # Extract heavy and light-chain features for each antibody
         heavy_data_features, _ = transformer.fit_transform(heavy_data)
 
         light_data_features, _ = transformer.fit_transform(light_data)
@@ -226,6 +256,7 @@ def extract_complex_encodings(complex_list:np.array, y=None, quantile=0.99, max_
             heavy_data_features = _get_mean_vals(heavy_data_features)
             light_data_features = _get_mean_vals(light_data_features)
             virus_data_features = _get_mean_vals(virus_data_features)
+            # Max length is always 1 for ProtBert encodings
             max_heavy = 1
             max_light = 1
             max_virus = 1
@@ -236,7 +267,9 @@ def extract_complex_encodings(complex_list:np.array, y=None, quantile=0.99, max_
             max_virus = floor(np.quantile([len(val) for val in virus.values()], quantile))
             #print(max_heavy, max_light, max_virus)
 
+    # Prepare ESM-1b or ESM-2 transformer
     elif ("esm1" in encoder) or ("esm2" in encoder):
+        # Retrieve pre-extracted encodings from the respective files
         encodings_path = os.path.dirname(os.path.abspath(__file__)) + "/regression_data/encodings/"
         if encoder == "esm1":
             heavy_features_file = "esm1b_t33_650M_UR50S_features_heavy_seqs/features.pkl"
@@ -271,6 +304,7 @@ def extract_complex_encodings(complex_list:np.array, y=None, quantile=0.99, max_
         #logging.info(msg=encodings_path + heavy_features_file)
         #logging.info(msg=os.getcwd())
 
+        # Extract heavy and light-chain encodings for each antibody
         heavy_data = read_pickle(encodings_path + heavy_features_file)
         heavy_data = {k:v for k,v in heavy_data["place_holder"].items() if k in abs["heavy"].keys()} #Get available sequences
         heavy_data_features = pd.DataFrame({"seq": heavy_data.values()}, index=heavy_data.keys())
@@ -281,21 +315,22 @@ def extract_complex_encodings(complex_list:np.array, y=None, quantile=0.99, max_
         light_data_features = pd.DataFrame({"seq": light_data.values()}, index=light_data.keys())
         light_data_features = _get_mean_vals(light_data_features)  # Get mean values
 
+        # Extract env sequence encodings for each virus
         virus_data = read_pickle(encodings_path + virus_features_file)
         virus_data = {k: v for k, v in virus_data["place_holder"].items() if k in virus.keys()} #Get available sequences
         virus_data_features = pd.DataFrame({"seq": virus_data.values()}, index=virus_data.keys())
         virus_data_features = _get_mean_vals(virus_data_features)  # Get mean values
 
-        # Max length is always 1
+        # Max length is always 1 for ESM-1b and ESM-2 encodings
         max_heavy = 1
         max_light = 1
         max_virus = 1
 
     else:
         raise ValueError("'encoder' parameter is not valid. Should be one of the following:\
-                          ['nlf', 'esm1', 'esm2-8M', 'esm2-8M', 'esm2-8M', 'esm2-8M', 'esm2-8M', 'protbert', 'z-scales']")
+                          ['nlf', 'esm1', 'esm2-8M', 'esm2-35M', 'esm2-150M', 'esm2-650M', 'esm2-3B', 'protbert', 'z-scales']")
 
-    # Allows continuity for compatibility with preprocessing transformers.
+    # Allows continuity for compatibility with preprocessing transformers (used in the '4_regression_test_figures.py' file).
     if max_sizes != None:
         max_heavy, max_light, max_virus = max_sizes
 
@@ -304,34 +339,21 @@ def extract_complex_encodings(complex_list:np.array, y=None, quantile=0.99, max_
     light_data_features = _encoding_dataframe(light_data_features, max_light, prefix="light")
     virus_data_features = _encoding_dataframe(virus_data_features, max_virus, prefix="virus")
 
-    #print(virus_data_features.shape)
-
     # Join heavy and light chain features
     abs_data_features = pd.concat([heavy_data_features, light_data_features], axis=1)
-
-    #print(abs_data_features.shape)
 
     # Create final dataset with all complex features
     all_cols = list(abs_data_features.columns) + list(virus_data_features.columns) #26031 features (8677 * 3)
     complex_data = pd.DataFrame(columns=all_cols)
 
-
-    #print(len(abs))
-    #logging.info(msg=str(len(abs)))
-
     ordered_complex_list = []
     count = 0
     for ab in complexes:
-        #logging.info(msg=f"\nAB: {ab} - {len(complexes[ab])} viruses")
         for vir in complexes[ab]:
-
             line_to_add = list(abs_data_features.loc[ab]) + list(virus_data_features.loc[vir])
             complex_data.loc[count] = line_to_add
             ordered_complex_list.append(vir + "__" + ab)
             count += 1
-
-    # Total complexes: 3662
-    #logging.info(msg=f"\n\n{complex_data.shape}\n\n")
 
     complex_data.index = ordered_complex_list
     if not (y is None):
@@ -341,11 +363,49 @@ def extract_complex_encodings(complex_list:np.array, y=None, quantile=0.99, max_
 
 
 
-def convert_complex_to_encodings(input_path="ic50_regression.dat", quantile=0.99, encoder: str = "nfl", seed=42,
-                                 **kwargs):
+def convert_complex_to_encodings(input_path:str="ic50_regression.dat", quantile:float=0.99, encoder:str = "nfl",
+                                 seed:int=42, **kwargs) -> List[pd.DataFrame, pd.Series, pd.DataFrame, pd.Series]:
+    """
+    Extracts specified encodings from given complex data file.
 
+    Parameters
+    ----------
+    input_path: str
+        File path containing antibody-virus complex data with IC50 our breadth values.
+    quantile: float
+        Quantile value to retrieve maximum sequence sizes for each group (light-chain, heavy-chain and viral sequences).
+    encoder: str
+        String value to define the type of encodings to extract.
+        Possible values are:
+            'nlf' - Uses the NLFEncoder class;
+            'protbert' - Uses the ProtBertEncoder class;
+            'z-scales' - Uses the ZScaleEncoder class;
+            'esm1' - Uses the Esm1bEncoder class;
+            'esm2_8M' - Uses the Esm2Encoder class (pretrained with 8 million parameters);
+            'esm2_35M' - Uses the Esm2Encoder class (pretrained with 35 million parameters);
+            'esm2_150M' - Uses the Esm2Encoder class (pretrained with 150 million parameters);
+            'esm2_650M' - Uses the Esm2Encoder class (pretrained with 650 million parameters);
+            'esm2_3B' - Uses the Esm2Encoder class (pretrained with 3 billion parameters).
+    seed: int
+        Random seed value.
+    kwargs:
+        Arguments to pass to the encoding class used.
+
+    Returns
+    -------
+    x_train: pd.DataFrame
+        Complex encoding training data set.
+    y_train: pd.Series
+        IC50 values of training data set.
+    x_test: pd.DataFrame
+        Complex encoding test data set.
+    y_test: pd.Series
+        IC50 values of test data set.
+    """
+
+    # Extract complex data from input file
     keys = get_keys(19) #According to figure 2 of respective article
-    y = extract_data(input_path, ['IC50'])#.ravel()
+    y = extract_data(input_path, ['IC50'])
     x = extract_data(input_path, keys)
 
     # Apply log ~ regressor over pIC50
@@ -355,18 +415,16 @@ def convert_complex_to_encodings(input_path="ic50_regression.dat", quantile=0.99
     # Split training and test set
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.5, shuffle=True, random_state=seed)
 
+    # Extract encodings for each sequence type (light-chain, heavy-chain and viral sequences)
     new_x, new_y = extract_complex_encodings(x.index.values, y, quantile=quantile, encoder=encoder, **kwargs)
 
+    # Split encodings into train and test sets.
     train_inds = [ind for ind in x_train.index if ind in new_x.index.values]
     test_inds =  [ind for ind in x_test.index  if ind in new_x.index.values]
-
-    print(x_train.shape, x_test.shape)
 
     x_train = new_x.loc[train_inds, :]
     x_test = new_x.loc[test_inds, :]
     y_train = new_y.loc[train_inds, :]
     y_test = new_y.loc[test_inds, :]
-
-    print(x_train.shape, x_test.shape)
 
     return [x_train, y_train, x_test, y_test]
