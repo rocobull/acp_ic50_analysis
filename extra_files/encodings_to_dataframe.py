@@ -377,15 +377,15 @@ def convert_complex_to_encodings(input_path:str="ic50_regression.dat", quantile:
     encoder: str
         String value to define the type of encodings to extract.
         Possible values are:
-            'nlf' - Uses the NLFEncoder class;
-            'protbert' - Uses the ProtBertEncoder class;
-            'z-scales' - Uses the ZScaleEncoder class;
-            'esm1' - Uses the Esm1bEncoder class;
-            'esm2_8M' - Uses the Esm2Encoder class (pretrained with 8 million parameters);
-            'esm2_35M' - Uses the Esm2Encoder class (pretrained with 35 million parameters);
-            'esm2_150M' - Uses the Esm2Encoder class (pretrained with 150 million parameters);
-            'esm2_650M' - Uses the Esm2Encoder class (pretrained with 650 million parameters);
-            'esm2_3B' - Uses the Esm2Encoder class (pretrained with 3 billion parameters).
+            -'nlf' - Uses the NLFEncoder class;
+            -'protbert' - Uses the ProtBertEncoder class;
+            -'z-scales' - Uses the ZScaleEncoder class;
+            -'esm1' - Uses the Esm1bEncoder class;
+            -'esm2_8M' - Uses the Esm2Encoder class (pretrained with 8 million parameters);
+            -'esm2_35M' - Uses the Esm2Encoder class (pretrained with 35 million parameters);
+            -'esm2_150M' - Uses the Esm2Encoder class (pretrained with 150 million parameters);
+            -'esm2_650M' - Uses the Esm2Encoder class (pretrained with 650 million parameters);
+            -'esm2_3B' - Uses the Esm2Encoder class (pretrained with 3 billion parameters).
     seed: int
         Random seed value.
     kwargs:
