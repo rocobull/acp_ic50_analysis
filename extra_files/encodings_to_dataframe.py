@@ -364,7 +364,7 @@ def extract_complex_encodings(complex_list:List[str], y:Union[pd.Series, None]=N
 
 
 def convert_complex_to_encodings(input_path:str="ic50_regression.dat", quantile:float=0.99, encoder:str = "nfl",
-                                 seed:int=42, **kwargs) -> List[pd.DataFrame, pd.Series, pd.DataFrame, pd.Series]:
+                                 seed:int=42, **kwargs) -> List[Union[pd.DataFrame, pd.Series]]:
     """
     Extracts specified encodings from given complex data file.
 
