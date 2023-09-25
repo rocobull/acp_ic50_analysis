@@ -42,7 +42,7 @@ for data, name in zip([data1, data2], ["740", "240"]):
                 test = pd.DataFrame([data.iloc[i,:] for i,_ in enumerate(data.index) if i % 5 == fold], columns=data.columns)
                 X_test, y_test = x_y_split(test, "acp")
 
-                #Getting pipeline steps
+                # Get pipeline steps
                 steps = preprocess_steps(descriptors=preset,
                                          **GENERAL_PARAMS,
                                          **comb)
