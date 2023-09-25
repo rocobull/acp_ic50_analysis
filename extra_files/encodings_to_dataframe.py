@@ -173,16 +173,16 @@ def extract_complex_encodings(complex_list:List[str], y:Union[pd.Series, None]=N
         If None, then the maximum sizes are determined using the defined quantile value.
     encoder: str
         String value to define the type of encodings to extract.
-        Possible values are:
-            'nlf' - Uses the NLFEncoder class;
-            'protbert' - Uses the ProtBertEncoder class;
-            'z-scales' - Uses the ZScaleEncoder class;
-            'esm1' - Uses the Esm1bEncoder class;
-            'esm2_8M' - Uses the Esm2Encoder class (pretrained with 8 million parameters);
-            'esm2_35M' - Uses the Esm2Encoder class (pretrained with 35 million parameters);
-            'esm2_150M' - Uses the Esm2Encoder class (pretrained with 150 million parameters);
-            'esm2_650M' - Uses the Esm2Encoder class (pretrained with 650 million parameters);
-            'esm2_3B' - Uses the Esm2Encoder class (pretrained with 3 billion parameters).
+        Options:
+            -'nlf' - Uses the NLFEncoder class;
+            -'protbert' - Uses the ProtBertEncoder class;
+            -'z-scales' - Uses the ZScaleEncoder class;
+            -'esm1' - Uses the Esm1bEncoder class;
+            -'esm2_8M' - Uses the Esm2Encoder class (pretrained with 8 million parameters);
+            -'esm2_35M' - Uses the Esm2Encoder class (pretrained with 35 million parameters);
+            -'esm2_150M' - Uses the Esm2Encoder class (pretrained with 150 million parameters);
+            -'esm2_650M' - Uses the Esm2Encoder class (pretrained with 650 million parameters);
+            -'esm2_3B' - Uses the Esm2Encoder class (pretrained with 3 billion parameters).
     kwargs:
         Arguments to pass to the encoding class used.
 
