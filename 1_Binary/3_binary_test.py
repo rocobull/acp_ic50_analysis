@@ -70,18 +70,12 @@ for data, name in zip([data1, data2], ["740", "240"]):
         predictor = best_pipeline.steps[-1][1]
         best_model = predictor.learner._trainer.load_model(best_model_name)
 
-        # Set hyperparameters (not required, seeing as they are already set - best_model.params)
-        #hyperparams = predictor.learner.info()['model_info'][best_model_name]['hyperparameters']
-        #best_model._init_parameters = hyperparams
+        # print(best_model.params)
 
         # Save features_to_remove list from the multicollinearity transformer to keep the same preprocessing process
         for step, transformer in steps:
             if step == "multicollinearity":
                 features_to_remove = transformer.features_to_remove
-
-        # Get ancestor model weights for the 'WeightedEnsemble_L2' model
-        # if best_model_name == "WeightedEnsemble_L2":
-        #     logging.info(msg=f"\n\nBEST MODEL: {best_model_name} - {best_model.compute_feature_importance('', '')}\n")
 
         # Get the test set of the first fold
         test = pd.DataFrame([data.iloc[i, :] for i, _ in enumerate(data.index) if i % 5 == 0], columns=data.columns)
