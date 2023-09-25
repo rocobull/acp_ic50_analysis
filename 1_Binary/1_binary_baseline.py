@@ -52,7 +52,8 @@ for data, name in zip([data1, data2], ["740", "240"]):
                     transformer.fit(X_train, y_train)
                     X_train, y_train = transformer.transform(X_train, y_train)
                     X_test, y_test = transformer.transform(X_test, y_test)
-
+                
+                # Remove columns with missing values
                 X_train = X_train.dropna(axis=1)
                 X_test = X_test.dropna(axis=1)
 
