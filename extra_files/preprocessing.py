@@ -1,4 +1,6 @@
-from typing import Union
+from typing import Union, List, Tuple, Type
+
+from omnia.generics import Transformer
 
 from omnia.generics.scaling import StandardScaler, MinMaxScaler
 from omnia.generics.feature_selection import MulticollinearityFS
@@ -8,76 +10,57 @@ from omnia.proteins.feature_extraction.protein_descriptor import ProteinDescript
 
 
 
-# def _message(type, verbose, *args):
-#     """
-#     type: #str
-#         'x_y_split'
-#         'na_remove'
-#         'na_treat'
-#         'descriptors'
-#         'scale'
-#         'multicol'
-#         'outliers'
-#         'skewness'
-#     """
-#     if verbose:
-#
-#         if type=="preset":
-#             msg = f"{type.upper()}\n{'#'*len(type)}\n"
-#
-#         elif type=="x_y_split":
-#             msg = f"### X-y split ###\n-----------------\n" \
-#                   f"Dataset was split into X and y variables\n"
-#
-#         elif type=="na_remove":
-#             msg = f"### NA Removal ###\n------------------\n" \
-#                   f"Lines removed: {args[0]}\n"
-#         elif type=="na_treat":
-#             msg = f"### NA Treatment ({args[1]}) ###\n-----------------------{'-'*len(args[1])}\n" \
-#                   f"Lines replaced: {args[0]}\n"
-#
-#         elif type=="descriptors":
-#             msg = f"### Descriptors ###\n-------------------\n" \
-#                   f"{args[0]} descriptors added\n"
-#
-#         elif type=="scale":
-#             msg = f"### Scaling ({args[0]}) ###\n------------------\n" \
-#                   f"Values scaled\n"
-#
-#         elif type=="multicol":
-#             if len(args[0]) <= 10:
-#                 cols = args[0]
-#             else:
-#                 cols = args[0][:3] + ["..."] + args[0][-3:]
-#             msg = f"### Multicolinearity ###\n------------------------\n" \
-#                   f"{len(args[0])} Columns removed: {cols}\n"
-#
-#         elif type=="outliers":
-#             msg = f"### Outliers ###\n----------------\n" \
-#                   f"Lines removed: {args[0]}\n"
-#
-#         elif type=="skewness":
-#             msg = f"### Skewness ###\n----------------\n" \
-#                   f"Columns transformed: {args[0]}\n"
-#
-#         else:
-#             raise ValueError("'type' has an invalid value. Check the class description for permitted values.")
-#
-#         print(msg)
-
-
-def preprocess_steps(#X:pd.DataFrame, y:Union[pd.DataFrame,None]=None, problem_type="binary",
-               #x_y_split:Union[bool,int,str]=False, y_name:Union[str,int]=-1,
-               #na=True, na_treat="mean",
-               descriptors:Union[str,None]="performance",
-               #outliers=True, outlier_find_method="iqr", outlier_treat_method="capping", outlier_capping_lim=0.9,
-               #outlier_flooring_lim=0.1, outlier_multiplier=3, outlier_features_to_consider=None,
-               #outlier_features_to_ignore=None,
-               skewness=True, skew_upper_limit=1, skew_lower_limit=-1, skew_method="yeo-johnson",
-               multicol=True, multicol_corr_limit=0.8, multicol_correlation_method="pearson",
-               multicol_features_to_keep=None,
-               scale_type:Union[str,None]="standard"):
+def preprocess_steps(descriptors:Union[str, None] = "performance",
+               skewness:bool = True, skew_upper_limit:float = 1.0, skew_lower_limit:float = -1.0, skew_method:str = "yeo-johnson",
+               multicol:bool = True, multicol_corr_limit:float = 0.8, multicol_correlation_method:str = "pearson",
+               multicol_features_to_keep:Union[List[str], None] = None,
+               scale_type:Union[str, None] = "standard") -> List[Tuple[str, Type[Transformer]]]:
     """
+    Generates a list of preprocessing steps to be used as an input to Omnia's Pipeline class.
+
+    Parameters
+    ----------
+    descriptors: Union[str, None]
+        A descriptor preset (see Omnia's ProteinDescriptor class for more information).
+        If None, no ProteinDescriptor instance is added to the list of steps.
+    skewness: bool
+        Decides whether skewness treatment is added to the list of steps (True) or not (False).
+    skew_upper_limit: float
+        The upper limit of the Fisher-Pearson coefficient, above or equal
+        to which a sample is to be considered skewed.
+    skew_lower_limit: float
+        The lower limit of the Fisher-Pearson coefficient, below or equal
+        to which a sample is to be considered skewed.
+    skew_method: str
+        The transformation technique used to treat skewed descriptor values.
+        Options:
+            -'yeo-johnson' - Yeo-Johnson data transformation (for all real values);
+            -'box-cox' - Box-Cox data transformation (for positive real values).
+    multicol: bool
+        Decides whether multicollinearity treatment is added to the list of steps (True) or not (False).
+    multicol_corr_limit: float
+        Absolute correlation value above which pairs of descriptors are considered collinear.
+    multicol_correlation_method: str
+        Method for correlation calculation.
+        Options:
+            -'pearson' - Standard correlation coefficient;
+            -'spearman' - Spearman rank correlation;
+            -'kendall' - Kendall Tau correlation coefficient.
+    multicol_features_to_keep: Union[List[str], None]
+        An array of descriptor names to keep, regardless of multicollinearity.
+    scale_type: Union[str, None]
+        The scaling method to be used.
+        Options:
+            -'standard' - Standard scaling (uses the StandardScaler class);
+            -'min_max' - Min-Max scaling (uses the MinMaxScaler class).
+        If None, then the scaling step is not added to the final list of steps.
+
+    Returns
+    -------
+    steps: List[Tuple[str, Type[Transformer]]]
+        A list of tuples, each containing a string value to identify the preprocessing step, and the respective
+        preprocessing Transformer.
+        If no steps are added, then an empty list is returned.
     """
     steps = []
 
@@ -85,20 +68,11 @@ def preprocess_steps(#X:pd.DataFrame, y:Union[pd.DataFrame,None]=None, problem_t
     if not (descriptors is None):
         steps.append(("descriptor", ProteinDescriptor(preset=descriptors)))
 
-    # # Outliers
-    # if outliers:
-    #     steps.append(("outliers", OutliersFS(find_method=outlier_find_method, treat_method=outlier_treat_method,
-    #                                          capping_limit=outlier_capping_lim, flooring_limit=outlier_flooring_lim,
-    #                                          multiplier=outlier_multiplier,
-    #                                          features_to_consider=outlier_features_to_consider,
-    #                                          features_to_ignore=outlier_features_to_ignore)))
-
     # Skewness
     if skewness:
         steps.append(("skewness", Skewness(upper_limit=skew_upper_limit,
                                            lower_limit=skew_lower_limit,
                                            method=skew_method)))
-
     # Multicollinearity
     if multicol:
         if multicol_features_to_keep is None:
@@ -108,7 +82,6 @@ def preprocess_steps(#X:pd.DataFrame, y:Union[pd.DataFrame,None]=None, problem_t
         steps.append(("multicollinearity", MulticollinearityFS(corr_limit=multicol_corr_limit,
                                                                correlation_method=multicol_correlation_method,
                                                                features_to_keep=cols_to_keep)))
-
     # Scaling
     if not (scale_type is None):
         if scale_type.lower() == "standard":
