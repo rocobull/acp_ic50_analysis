@@ -15,7 +15,7 @@ def pipeline(X_train:pd.DataFrame, y_train:pd.DataFrame,
              folds:bool = False, fold_num:str = "0",
              to_save:bool = True) -> Pipeline:
     """
-    A wrapper class that returns a fitted Pipeline class instance (from Omnia).
+    A wrapper function that returns a fitted Pipeline class instance (from Omnia).
 
     Parameters
     ----------
