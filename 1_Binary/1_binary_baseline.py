@@ -11,7 +11,7 @@ from sklearn.naive_bayes import GaussianNB
 from omnia.generics import np, pd
 
 
-# Prepare metrics
+# Prepare metric names
 METRICS = ["accuracy", "recall", "specificity", "precision", "mcc"]
 
 # Import ACP740 and ACP240 data
