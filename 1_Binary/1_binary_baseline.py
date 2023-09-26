@@ -21,7 +21,7 @@ data1.index = range(len(data1.iloc[:, 0]))
 data2 = convert_acp_to_dataframe("acp240.txt")
 data2.index = range(len(data2.iloc[:, 0]))
 
-# Start data, preprocessing combination and preset iterations
+# Start data, preprocessing combination and descriptor preset iterations
 for data, name in zip([data1, data2], ["740", "240"]):
 
     for ix, comb in enumerate(VARIABLE_PARAMS):
