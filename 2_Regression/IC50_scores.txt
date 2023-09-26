@@ -1,0 +1,8 @@
+> CatBoostModel/T47_2_z-scales - {'allow_writing_files': False, 'depth': 8, 'iterations': 10000, 'l2_leaf_reg': 2.1897478034205347, 'learning_rate': 0.10062894795830075, 'random_seed': 0}
+RMSE	MSE	r2	pearsonr	spearmanr
+1.5585786480651806	2.4291674022046865	0.4353443861049021	0.661163802830616	0.6740473692664664
+
+> CatBoostModel/T53_0_esm2_3B - {'allow_writing_files': False, 'depth': 8, 'iterations': 10000, 'l2_leaf_reg': 3.64069414997074, 'learning_rate': 0.014577791460449551, 'random_seed': 0}
+RMSE	MSE	r2	pearsonr	spearmanr
+1.5324877884684003	2.3485188218047686	0.45409100424005144	0.6756500464658838	0.6900382840614626
+
