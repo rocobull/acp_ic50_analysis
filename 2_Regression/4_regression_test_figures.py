@@ -7,7 +7,7 @@ from extra_files import convert_complex_to_encodings, extract_complex_encodings,
                         GENERAL_PARAMS, VARIABLE_PARAMS,\
                         seaman2010, antibodies, breadth_exp
 
-from omnia.generics import TabularPredictor, CatBoostModel, Model, Transformer, np
+from omnia.generics import CatBoostModel, Model, Transformer, np
 
 from typing import Union, List, Tuple
 
@@ -291,7 +291,7 @@ def compute_breadth_all_average(model_name:str, model_hyperparams:dict, preset:s
 
 
 
-def make_fig4(breadth_calc:dict, titlestr, fname:str):
+def make_fig4(breadth_calc:dict, title:str, fname:str):
     """
     Recreates Figure 4 from Conti S. & Karplus M. (2019) (https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006954).
 
