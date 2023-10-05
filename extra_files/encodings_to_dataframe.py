@@ -155,7 +155,7 @@ def _encoding_dataframe(df:pd.DataFrame, max_len:int, prefix:str="heavy") -> pd.
 
 def extract_complex_encodings(complex_list:List[str], y:Union[pd.Series, None]=None, quantile:float=0.99,
                               max_sizes:Union[List[int], None]=None, encoder:str="nlf",
-                              **kwargs) -> Tuple[pd.DataFrame, Union[pd.Series, None]]:
+                              **kwargs) -> Union[Tuple[pd.DataFrame, Union[pd.Series, None]], None]:
     """
     Extract the specified encodings for the available light and heavy-chain antibody sequences,
     and viral env protein sequences.
@@ -173,16 +173,16 @@ def extract_complex_encodings(complex_list:List[str], y:Union[pd.Series, None]=N
         If None, then the maximum sizes are determined using the defined quantile value.
     encoder: str
         String value to define the type of encodings to extract.
-        Options:
-            -'nlf' - Uses the NLFEncoder class;
-            -'protbert' - Uses the ProtBertEncoder class;
-            -'z-scales' - Uses the ZScaleEncoder class;
-            -'esm1' - Uses the Esm1bEncoder class;
-            -'esm2_8M' - Uses the Esm2Encoder class (pretrained with 8 million parameters);
-            -'esm2_35M' - Uses the Esm2Encoder class (pretrained with 35 million parameters);
-            -'esm2_150M' - Uses the Esm2Encoder class (pretrained with 150 million parameters);
-            -'esm2_650M' - Uses the Esm2Encoder class (pretrained with 650 million parameters);
-            -'esm2_3B' - Uses the Esm2Encoder class (pretrained with 3 billion parameters).
+        Possible values are:
+            'nlf' - Uses the NLFEncoder class;
+            'protbert' - Uses the ProtBertEncoder class;
+            'z-scales' - Uses the ZScaleEncoder class;
+            'esm1' - Uses the Esm1bEncoder class;
+            'esm2_8M' - Uses the Esm2Encoder class (pretrained with 8 million parameters);
+            'esm2_35M' - Uses the Esm2Encoder class (pretrained with 35 million parameters);
+            'esm2_150M' - Uses the Esm2Encoder class (pretrained with 150 million parameters);
+            'esm2_650M' - Uses the Esm2Encoder class (pretrained with 650 million parameters);
+            'esm2_3B' - Uses the Esm2Encoder class (pretrained with 3 billion parameters).
     kwargs:
         Arguments to pass to the encoding class used.
 
@@ -301,22 +301,22 @@ def extract_complex_encodings(complex_list:List[str], y:Union[pd.Series, None]=N
                 light_features_file = "esm2_t36_3B_UR50D_features_light_seqs/features.pkl"
                 virus_features_file = "esm2_t36_3B_UR50D_features_virus_seqs/features.pkl"
 
-        #logging.info(msg=encodings_path + heavy_features_file)
-        #logging.info(msg=os.getcwd())
-
         # Extract heavy and light-chain encodings for each antibody
         heavy_data = read_pickle(encodings_path + heavy_features_file)
+        #logging.info(msg=f"HEAVY DATA:\n{list(heavy_data['place_holder'].keys())}\n\n")
         heavy_data = {k:v for k,v in heavy_data["place_holder"].items() if k in abs["heavy"].keys()} #Get available sequences
         heavy_data_features = pd.DataFrame({"seq": heavy_data.values()}, index=heavy_data.keys())
         heavy_data_features = _get_mean_vals(heavy_data_features)  # Get mean values
 
         light_data = read_pickle(encodings_path + light_features_file)
+        #logging.info(msg=f"LIGHT DATA:\n{list(light_data['place_holder'].keys())}\n\n")
         light_data = {k: v for k, v in light_data["place_holder"].items() if k in abs["light"].keys()} #Get available sequences
         light_data_features = pd.DataFrame({"seq": light_data.values()}, index=light_data.keys())
         light_data_features = _get_mean_vals(light_data_features)  # Get mean values
 
         # Extract env sequence encodings for each virus
         virus_data = read_pickle(encodings_path + virus_features_file)
+        #logging.info(msg=f"VIRUS DATA:\n{list(virus_data['place_holder'].keys())}\n\n")
         virus_data = {k: v for k, v in virus_data["place_holder"].items() if k in virus.keys()} #Get available sequences
         virus_data_features = pd.DataFrame({"seq": virus_data.values()}, index=virus_data.keys())
         virus_data_features = _get_mean_vals(virus_data_features)  # Get mean values
@@ -350,10 +350,22 @@ def extract_complex_encodings(complex_list:List[str], y:Union[pd.Series, None]=N
     count = 0
     for ab in complexes:
         for vir in complexes[ab]:
+
+            # Some pre-generated encodings did not account for some antibodies/viruses, meaning those have to be skipped
+            if not (ab in abs_data_features.index):
+                #logging.info(msg=f"MISSING AB: {ab}")
+                continue
+            if not (vir in virus_data_features.index): # Only 2 Virus IDs were not accounted for (BZ167_12 and 0260_V5_C1)
+                #logging.info(msg=f"MISSING VIRUS: {vir}")
+                continue
+
             line_to_add = list(abs_data_features.loc[ab]) + list(virus_data_features.loc[vir])
             complex_data.loc[count] = line_to_add
             ordered_complex_list.append(vir + "__" + ab)
             count += 1
+
+    if len(complex_data.iloc[:, 0]) == 0:
+        return None
 
     complex_data.index = ordered_complex_list
     if not (y is None):
@@ -377,15 +389,15 @@ def convert_complex_to_encodings(input_path:str="ic50_regression.dat", quantile:
     encoder: str
         String value to define the type of encodings to extract.
         Possible values are:
-            -'nlf' - Uses the NLFEncoder class;
-            -'protbert' - Uses the ProtBertEncoder class;
-            -'z-scales' - Uses the ZScaleEncoder class;
-            -'esm1' - Uses the Esm1bEncoder class;
-            -'esm2_8M' - Uses the Esm2Encoder class (pretrained with 8 million parameters);
-            -'esm2_35M' - Uses the Esm2Encoder class (pretrained with 35 million parameters);
-            -'esm2_150M' - Uses the Esm2Encoder class (pretrained with 150 million parameters);
-            -'esm2_650M' - Uses the Esm2Encoder class (pretrained with 650 million parameters);
-            -'esm2_3B' - Uses the Esm2Encoder class (pretrained with 3 billion parameters).
+            'nlf' - Uses the NLFEncoder class;
+            'protbert' - Uses the ProtBertEncoder class;
+            'z-scales' - Uses the ZScaleEncoder class;
+            'esm1' - Uses the Esm1bEncoder class;
+            'esm2_8M' - Uses the Esm2Encoder class (pretrained with 8 million parameters);
+            'esm2_35M' - Uses the Esm2Encoder class (pretrained with 35 million parameters);
+            'esm2_150M' - Uses the Esm2Encoder class (pretrained with 150 million parameters);
+            'esm2_650M' - Uses the Esm2Encoder class (pretrained with 650 million parameters);
+            'esm2_3B' - Uses the Esm2Encoder class (pretrained with 3 billion parameters).
     seed: int
         Random seed value.
     kwargs:
