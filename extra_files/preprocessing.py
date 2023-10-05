@@ -14,7 +14,7 @@ def preprocess_steps(descriptors:Union[str, None] = "performance",
                skewness:bool = True, skew_upper_limit:float = 1.0, skew_lower_limit:float = -1.0, skew_method:str = "yeo-johnson",
                multicol:bool = True, multicol_corr_limit:float = 0.8, multicol_correlation_method:str = "pearson",
                multicol_features_to_keep:Union[List[str], None] = None,
-               scale_type:Union[str, None] = "standard") -> List[Tuple[str, Type[Transformer]]]:
+               scale_type:Union[str, None] = "standard") -> List[Tuple[str, Transformer]]:
     """
     Generates a list of preprocessing steps to be used as an input to Omnia's Pipeline class.
 
@@ -57,7 +57,7 @@ def preprocess_steps(descriptors:Union[str, None] = "performance",
 
     Returns
     -------
-    steps: List[Tuple[str, Type[Transformer]]]
+    steps: List[Tuple[str, Transformer]]
         A list of tuples, each containing a string value to identify the preprocessing step, and the respective
         preprocessing Transformer.
         If no steps are added, then an empty list is returned.
