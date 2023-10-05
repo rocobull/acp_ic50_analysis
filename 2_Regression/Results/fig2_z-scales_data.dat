@@ -1,0 +1,12 @@
+Correlation in training set
+Pearson   : 1.000
+Spearman  : 1.000
+Slope     : 0.999976
+Intercept : 0.000023
+
+Correlation in validation set
+Pearson   : 0.669
+Spearman  : 0.685
+Slope     : 0.489098
+Intercept : 0.550141
+
