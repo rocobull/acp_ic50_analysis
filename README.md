@@ -26,6 +26,6 @@ using protein encoding representations, the results completely surpassed those o
 network (NN) approach taken by the authors of the comparison article. Overall, this study proves that Om-
 niA is perfectly capable of producing precise predictions, both for binary and regression problems alike,
 doing so in an almost completely automated manner and setting the foundation for further automation to
-boost the generation of powerful models for biomedical research, overcoming tough health-related issues.
+boost the generation of powerful models for biomedical research.
 
 **Keywords:** OmniA, automation, pipeline, preprocessing, proteins.
