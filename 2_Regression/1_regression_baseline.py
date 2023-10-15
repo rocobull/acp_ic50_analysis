@@ -34,9 +34,6 @@ encodings = [("nlf", {"n_jobs":2}),
 for ix, comb in enumerate(VARIABLE_PARAMS):
     for preset, params in encodings:
 
-        if preset != "esm1":
-            continue
-
         # Prepare info_to_save string and score dictionaries
         info_to_save = ""
 
