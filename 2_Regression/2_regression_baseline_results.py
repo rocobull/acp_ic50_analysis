@@ -2,89 +2,76 @@
 METRICS = ['root_mean_squared_error', 'mean_squared_error', 'r2', 'pearsonr', 'spearman']
 
 
-svm_compare = {
-               "title": "",
-               "svm": [0.0, 0.0, 0.0, 0.0, 0.0],
-               "rf": [0.0, 0.0, 0.0, 0.0, 0.0],
-               "knn": [0.0, 0.0, 0.0, 0.0, 0.0]
-              }
-rf_compare = {
-               "title": "",
-               "svm": [0.0, 0.0, 0.0, 0.0, 0.0],
-               "rf": [0.0, 0.0, 0.0, 0.0, 0.0],
-               "knn": [0.0, 0.0, 0.0, 0.0, 0.0]
-             }
-knn_compare = {
-               "title": "",
-               "svm": [0.0, 0.0, 0.0, 0.0, 0.0],
-               "rf": [0.0, 0.0, 0.0, 0.0, 0.0],
-               "knn": [0.0, 0.0, 0.0, 0.0, 0.0]
-              }
-
 # Retrieve information from ''IC50_baseline_encodings.txt' file
 results_baseline = open("IC50_baseline_encodings.txt", "r").readlines()
 
-for index, line in enumerate(results_baseline):
+print(f"\n\nBEST MODELS\n-----------------\n")
 
-    line = line.strip()
+for desc in ["nlf", "esm1", "esm2_8M", "esm2_35M", "esm2_150M", "esm2_650M", "esm2_3B", "protbert", "z-scales"]:
 
-    if line != "":
-        # If line is an entry title:
-        if line[0] == ">":
-            title = line.split(" ")[1]
-        else:
-            vals = line.split("\t")
+    svm_compare = {
+                   "title": "",
+                   "svm": [0.0, 0.0, 0.0, 0.0, 0.0]
+                  }
+    rf_compare = {
+                   "title": "",
+                   "rf": [0.0, 0.0, 0.0, 0.0, 0.0]
+                 }
+    knn_compare = {
+                   "title": "",
+                   "knn": [0.0, 0.0, 0.0, 0.0, 0.0]
+                  }
 
-            if vals[0] == "SVM":
+    for index, line in enumerate(results_baseline):
 
-                svm_mean = [float(val) for val in vals[1:]]
+        line = line.strip()
 
-                rf_vals = results_baseline[index + 1].strip().split("\t")
-                rf_mean = [float(val) for val in rf_vals[1:]]
+        if line != "":
+            # If line is an entry title:
+            if line[0] == ">":
+                title = line.split(" ")[1]
+            else:
+                if title[2:] != desc:
+                    continue
+                vals = line.split("\t")
 
-                knn_vals = results_baseline[index + 2].strip().split("\t")
-                knn_mean = [float(val) for val in knn_vals[1:]]
+                if vals[0] == "SVM":
 
-                # Compare 'spearman' values, and replace former values if new 'spearman' value is superior
-                if svm_mean[4] > svm_compare['svm'][4]:
-                    svm_compare["title"] = title
+                    svm_scores = [float(val) for val in vals[1:]]
 
-                    svm_compare["svm"] = svm_mean
-                    svm_compare["rf"] = rf_mean
-                    svm_compare["knn"] = knn_mean
+                    rf_vals = results_baseline[index + 1].strip().split("\t")
+                    rf_scores = [float(val) for val in rf_vals[1:]]
 
-                if rf_mean[4] > rf_compare['rf'][4]:
-                    rf_compare["title"] = title
+                    knn_vals = results_baseline[index + 2].strip().split("\t")
+                    knn_scores = [float(val) for val in knn_vals[1:]]
 
-                    rf_compare["svm"] = svm_mean
-                    rf_compare["rf"] = rf_mean
-                    rf_compare["knn"] = knn_mean
+                    # Compare 'spearman' values, and replace former values if new 'spearman' value is superior
+                    if svm_scores[4] > svm_compare['svm'][4]:
+                        svm_compare["title"] = title
+                        svm_compare["svm"] = svm_scores
 
-                if knn_mean[4] > knn_compare['knn'][4]:
-                    knn_compare["title"] = title
+                    if rf_scores[4] > rf_compare['rf'][4]:
+                        rf_compare["title"] = title
+                        rf_compare["rf"] = rf_scores
 
-                    knn_compare["svm"] = svm_mean
-                    knn_compare["rf"] = rf_mean
-                    knn_compare["knn"] = knn_mean
+                    if knn_scores[4] > knn_compare['knn'][4]:
+                        knn_compare["title"] = title
+                        knn_compare["knn"] = knn_scores
 
-# Print best values for each baseline model
-print(f"BEST MODELS\n-----------------\n")
+    # Print best values for each baseline model, in regard to each encoding preset
+    print(f"\n'{desc}'\n{'-' * len(desc)}--\n")
 
-print(f"Best SVM model - {svm_compare['title']}:\n---")
-print(f"SVM:\t{svm_compare['svm']}")
-print(f"RF: \t{svm_compare['rf']}")
-print(f"KNN: \t{svm_compare['knn']}")
+    print(f"Best SVM model - {svm_compare['title']}:\n---")
+    print(f"SVM:\t{svm_compare['svm']}")
 
-print()
+    print()
 
-print(f"Best RF model - {rf_compare['title']}:\n---")
-print(f"SVM:\t{rf_compare['svm']}")
-print(f"RF: \t{rf_compare['rf']}")
-print(f"KNN: \t{rf_compare['knn']}")
+    print(f"Best RF model - {rf_compare['title']}:\n---")
+    print(f"RF: \t{rf_compare['rf']}")
 
-print()
+    print()
 
-print(f"Best KNN model - {knn_compare['title']}:\n---")
-print(f"SVM:\t{knn_compare['svm']}")
-print(f"RF: \t{knn_compare['rf']}")
-print(f"KNN: \t{knn_compare['knn']}")
+    print(f"Best KNN model - {knn_compare['title']}:\n---")
+    print(f"KNN: \t{knn_compare['knn']}")
+
+    print()
